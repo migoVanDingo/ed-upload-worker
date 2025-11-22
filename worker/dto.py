@@ -1,6 +1,8 @@
+# worker/dto.py
 from typing import Callable, Awaitable
-from pydantic import BaseModel
 from enum import Enum
+
+from pydantic import BaseModel
 
 
 class MediaType(str, Enum):
@@ -25,5 +27,3 @@ class FileEvent(BaseModel):
 
 
 HandlerFn = Callable[["FileEvent"], Awaitable[None]]
-
-MEDIA_HANDLERS: dict[MediaType, HandlerFn] = {}

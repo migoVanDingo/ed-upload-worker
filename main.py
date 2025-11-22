@@ -5,14 +5,13 @@ import logging
 
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
-from worker.dto import MEDIA_HANDLERS
-from worker.media_utils import classify_media_type, normalize_file_event
+from worker.media_utils import classify_media_type, normalize_file_event, MEDIA_HANDLERS
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("file-worker")
 
 app = FastAPI()
-
 
 # ------------------------
 # Existing Pub/Sub handler
