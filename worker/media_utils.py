@@ -115,6 +115,8 @@ async def handle_text(event: FileEvent) -> None:
 def normalize_file_event(raw_event: Dict[str, Any]) -> FileEvent:
     """
     Normalize Eventarc/CloudEvent or raw data payload into our FileEvent.
+    Prefer explicit object metadata (datastoreId, uploadSessionId, fileId),
+    then fall back to parsing the object key convention.
     """
     if isinstance(raw_event.get("data"), dict):
         data = raw_event["data"]
@@ -129,8 +131,15 @@ def normalize_file_event(raw_event: Dict[str, Any]) -> FileEvent:
     # Try to get IDs from metadata first (future-friendly),
     # then fall back to parsing the object key convention.
     metadata = data.get("metadata") or {}
-    datastore_id = metadata.get("datastoreId")
-    upload_session_id = metadata.get("uploadSessionId")
+
+    # Support both camelCase (preferred) and snake_case for robustness
+    datastore_id = metadata.get("datastoreId") or metadata.get("datastore_id")
+    upload_session_id = (
+        metadata.get("uploadSessionId")
+        or metadata.get("session_id")
+        or metadata.get("upload_session_id")
+    )
+    file_id = metadata.get("fileId") or metadata.get("file_id")
 
     if not datastore_id or not upload_session_id:
         parsed_datastore_id, parsed_upload_session_id = parse_object_key_metadata(name)
@@ -144,5 +153,5 @@ def normalize_file_event(raw_event: Dict[str, Any]) -> FileEvent:
         size=size_int,
         datastore_id=datastore_id,
         upload_session_id=upload_session_id,
-        # file_id can be filled later once the DB row exists
+        file_id=file_id,
     )

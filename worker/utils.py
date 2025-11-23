@@ -1,15 +1,23 @@
-# worker/media_utils.py
+# worker/utils.py
 from typing import Optional, Tuple
 
 
 def parse_object_key_metadata(object_key: str) -> Tuple[Optional[str], Optional[str]]:
     """
-    Parse datastore_id and upload_session_id from an object key like:
+    Parse datastore_id and upload_session_id from an object key.
 
-        raw/datastore/{datastore_id}/session/{upload_session_id}/{filename}
+    Supports both the old and new layouts:
 
-    Returns (datastore_id, upload_session_id). If a part can't be found, it
-    returns None for that piece.
+        Old:
+            raw/datastore/{datastore_id}/session/{upload_session_id}/{filename}
+
+        New:
+            raw/datastore/{datastore_id}/session/{upload_session_id}/file/{file_id}/{filename}
+
+    Returns:
+        (datastore_id, upload_session_id)
+
+    If a part can't be found, returns None for that piece.
     """
     if not object_key:
         return None, None
