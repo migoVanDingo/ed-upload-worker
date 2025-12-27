@@ -70,6 +70,11 @@ async def handle_pubsub(envelope: PubSubEnvelope):
 async def handle_gcs_events(request: Request):
     raw = await request.json()
     file_event = normalize_file_event(raw)
+    # ✅ Prevent Eventarc “re-processing” outputs (curated/staged/etc)
+    object_name = (file_event.name or "").lstrip("/")  # normalize
+    if not object_name.startswith("raw/"):
+        logger.info("Ignoring non-raw GCS finalized event: %s", object_name)
+        return Response(status_code=204)
     file_event.media_type = classify_media_type(file_event.content_type or "")
 
     handler = MEDIA_HANDLERS.get(file_event.media_type, None)
