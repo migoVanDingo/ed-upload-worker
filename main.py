@@ -77,7 +77,13 @@ async def handle_pubsub(request: Request):
 
 @app.post("/gcs-events")
 async def handle_gcs_events(request: Request):
-    verify_internal_event_request(request, endpoint_name="/gcs-events")
+    """
+    Receives GCS object finalized events delivered by Eventarc/Cloud Run.
+    This endpoint must not require the custom X-Internal-Auth header because
+    requests are sent by GCP infrastructure, not by our own internal callers.
+    Security for this route should be enforced at the Cloud Run/Eventarc layer.
+    """
+    # verify_internal_event_request(request, endpoint_name="/gcs-events")
 
     raw = await request.json()
     file_event = normalize_file_event(raw)
