@@ -5,6 +5,7 @@ import logging
 
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
+from platform_common.auth.internal import verify_internal_event_request
 from worker.media_utils import classify_media_type, normalize_file_event, MEDIA_HANDLERS
 
 
@@ -29,11 +30,19 @@ async def root():
 
 
 @app.post("/pubsub")
-async def handle_pubsub(envelope: PubSubEnvelope):
+async def handle_pubsub(request: Request):
     """
     For classic Pub/Sub push (NOT Eventarc storage events).
     You can keep this if you ever wire a Pub/Sub topic directly.
     """
+    verify_internal_event_request(request, endpoint_name="/pubsub")
+
+    try:
+        envelope = PubSubEnvelope(**(await request.json()))
+    except Exception:
+        logger.warning("Invalid /pubsub request body")
+        return Response(status_code=400)
+
     try:
         data_b64 = envelope.message.get("data", "")
         payload = base64.b64decode(data_b64).decode("utf-8")
@@ -68,6 +77,8 @@ async def handle_pubsub(envelope: PubSubEnvelope):
 
 @app.post("/gcs-events")
 async def handle_gcs_events(request: Request):
+    verify_internal_event_request(request, endpoint_name="/gcs-events")
+
     raw = await request.json()
     file_event = normalize_file_event(raw)
     # ✅ Prevent Eventarc “re-processing” outputs (curated/staged/etc)
