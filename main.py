@@ -5,7 +5,7 @@ import logging
 
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
-from platform_common.auth.internal import verify_internal_event_request
+from worker.internal_auth import verify_internal_event_request
 from worker.media_utils import classify_media_type, normalize_file_event, MEDIA_HANDLERS
 
 
